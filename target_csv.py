@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 
 import argparse
+import collections
+import csv
+import http.client
 import io
+import json
 import os
 import sys
-import json
-import csv
 import threading
-import http.client
 import urllib
 from datetime import datetime
-import collections
-import pkg_resources
 
-from jsonschema.validators import Draft4Validator
+import pkg_resources
 import singer
+from jsonschema.validators import Draft4Validator
 
 logger = singer.get_logger()
 
@@ -35,7 +35,7 @@ def flatten(d, parent_key='', sep='__'):
             items.append((new_key, str(v) if type(v) is list else v))
     return dict(items)
         
-def persist_messages(delimiter, quotechar, messages, destination_path):
+def persist_messages(delimiter, quotechar, messages, destination_path, timestamp_in_filename):
     state = None
     schemas = {}
     key_properties = {}
@@ -57,8 +57,10 @@ def persist_messages(delimiter, quotechar, messages, destination_path):
                                 "was encountered before a corresponding schema".format(o['stream']))
 
             validators[o['stream']].validate(o['record'])
-
-            filename = o['stream'] + '-' + now + '.csv'
+            if timestamp_in_filename is True:
+                filename = o['stream'] + '-' + now + '.csv'
+            if timestamp_in_filename is False:
+               filename = o['stream'] + '.csv'
             filename = os.path.expanduser(os.path.join(destination_path, filename))
             file_is_empty = (not os.path.isfile(filename)) or os.stat(filename).st_size == 0
 
@@ -141,7 +143,8 @@ def main():
     state = persist_messages(config.get('delimiter', ','),
                              config.get('quotechar', '"'),
                              input_messages,
-                             config.get('destination_path', ''))
+                             config.get('destination_path', ''),
+                             config.get('timestamp_in_filename', True)),
 
     emit_state(state)
     logger.debug("Exiting normally")
