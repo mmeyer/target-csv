@@ -44,8 +44,6 @@ def persist_messages(delimiter, quotechar, messages, destination_path, timestamp
     
     now = datetime.now().strftime('%Y%m%dT%H%M%S')
 
-    counter=0
-
     for message in messages:
         try:
             o = singer.parse_message(message).asdict()
@@ -53,6 +51,7 @@ def persist_messages(delimiter, quotechar, messages, destination_path, timestamp
             logger.error("Unable to parse:\n{}".format(message))
             raise
         message_type = o['type']
+        counter=0
         if message_type == 'RECORD':
             counter = counter + 1
             if o['stream'] not in schemas:
