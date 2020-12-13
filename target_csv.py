@@ -53,8 +53,8 @@ def persist_messages(delimiter, quotechar, messages, destination_path, timestamp
             logger.error("Unable to parse:\n{}".format(message))
             raise
         message_type = o['type']
-        counter = counter + 1
         if message_type == 'RECORD':
+            counter = counter + 1
             if o['stream'] not in schemas:
                 raise Exception("A record for stream {}"
                                 "was encountered before a corresponding schema".format(o['stream']))
