@@ -62,8 +62,8 @@ def persist_messages(delimiter, quotechar, messages, destination_path, timestamp
             previous_stream = current_stream
             counter = counter + 1
             
-            if (n % 10000==0):
-                logger.info('Record ' +str(counter) + ' for Table: ' +str(o['stream']) )
+            if (counter % 10000==0):
+                logger.info('Record ' + str(counter) + ' for Table: ' + str(o['stream']))
 
             if o['stream'] not in schemas:
                 raise Exception("A record for stream {}"
