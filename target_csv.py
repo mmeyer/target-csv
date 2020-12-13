@@ -41,8 +41,10 @@ def persist_messages(delimiter, quotechar, messages, destination_path, timestamp
     key_properties = {}
     headers = {}
     validators = {}
-
+    
     now = datetime.now().strftime('%Y%m%dT%H%M%S')
+
+    counter=0
 
     for message in messages:
         try:
@@ -51,6 +53,7 @@ def persist_messages(delimiter, quotechar, messages, destination_path, timestamp
             logger.error("Unable to parse:\n{}".format(message))
             raise
         message_type = o['type']
+        counter = counter + 1
         if message_type == 'RECORD':
             if o['stream'] not in schemas:
                 raise Exception("A record for stream {}"
@@ -64,18 +67,18 @@ def persist_messages(delimiter, quotechar, messages, destination_path, timestamp
             filename = os.path.expanduser(os.path.join(destination_path, filename))
             file_is_empty = (not os.path.isfile(filename)) or os.stat(filename).st_size == 0
 
+            if append_to_export is False and file_is_empty is False and counter==1:
+                os.remove(filename)
+
             flattened_record = flatten(o['record'])
 
             if o['stream'] not in headers and not file_is_empty:
-                if append_to_export is True:
                     with open(filename, 'r') as csvfile:
                         reader = csv.reader(csvfile,
                                             delimiter=delimiter,
                                             quotechar=quotechar)
                         first_line = next(reader)
                         headers[o['stream']] = first_line if first_line else flattened_record.keys()
-                else:
-                    headers[o['stream']] = flattened_record.keys()
             else:
                 headers[o['stream']] = flattened_record.keys()
 
@@ -85,7 +88,7 @@ def persist_messages(delimiter, quotechar, messages, destination_path, timestamp
                                         extrasaction='ignore',
                                         delimiter=delimiter,
                                         quotechar=quotechar)
-                if file_is_empty or append_to_export is False:
+                if file_is_empty:
                     writer.writeheader()
 
                 writer.writerow(flattened_record)
