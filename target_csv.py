@@ -41,6 +41,7 @@ def persist_messages(delimiter, quotechar, messages, destination_path, timestamp
     key_properties = {}
     headers = {}
     validators = {}
+    counter=0
     
     now = datetime.now().strftime('%Y%m%dT%H%M%S')
 
@@ -51,9 +52,13 @@ def persist_messages(delimiter, quotechar, messages, destination_path, timestamp
             logger.error("Unable to parse:\n{}".format(message))
             raise
         message_type = o['type']
-        counter=0
+
         if message_type == 'RECORD':
             counter = counter + 1
+            
+            logger.info('Message Counter: ' +str(counter))
+            logger.info('Stream for Table: ' +str(o['stream']))
+            
             if o['stream'] not in schemas:
                 raise Exception("A record for stream {}"
                                 "was encountered before a corresponding schema".format(o['stream']))
