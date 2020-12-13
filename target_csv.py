@@ -41,7 +41,8 @@ def persist_messages(delimiter, quotechar, messages, destination_path, timestamp
     key_properties = {}
     headers = {}
     validators = {}
-    counter=0
+    previous_stream = ""
+    counter = 0
     
     now = datetime.now().strftime('%Y%m%dT%H%M%S')
 
@@ -54,6 +55,11 @@ def persist_messages(delimiter, quotechar, messages, destination_path, timestamp
         message_type = o['type']
 
         if message_type == 'RECORD':
+            
+            current_stream = o['stream']
+            if current_stream != previous_stream:
+                counter = 0
+            previous_stream = current_stream
             counter = counter + 1
             
             logger.info('Message Counter: ' +str(counter))
