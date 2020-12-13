@@ -35,7 +35,7 @@ def flatten(d, parent_key='', sep='__'):
             items.append((new_key, str(v) if type(v) is list else v))
     return dict(items)
         
-def persist_messages(delimiter, quotechar, messages, destination_path, timestamp_in_filename):
+def persist_messages(delimiter, quotechar, messages, destination_path, timestamp_in_filename, append_to_export):
     state = None
     schemas = {}
     key_properties = {}
@@ -67,12 +67,15 @@ def persist_messages(delimiter, quotechar, messages, destination_path, timestamp
             flattened_record = flatten(o['record'])
 
             if o['stream'] not in headers and not file_is_empty:
-                with open(filename, 'r') as csvfile:
-                    reader = csv.reader(csvfile,
-                                        delimiter=delimiter,
-                                        quotechar=quotechar)
-                    first_line = next(reader)
-                    headers[o['stream']] = first_line if first_line else flattened_record.keys()
+                if append_to_export is True:
+                    with open(filename, 'r') as csvfile:
+                        reader = csv.reader(csvfile,
+                                            delimiter=delimiter,
+                                            quotechar=quotechar)
+                        first_line = next(reader)
+                        headers[o['stream']] = first_line if first_line else flattened_record.keys()
+                else:
+                    headers[o['stream']] = flattened_record.keys()
             else:
                 headers[o['stream']] = flattened_record.keys()
 
@@ -82,7 +85,7 @@ def persist_messages(delimiter, quotechar, messages, destination_path, timestamp
                                         extrasaction='ignore',
                                         delimiter=delimiter,
                                         quotechar=quotechar)
-                if file_is_empty:
+                if file_is_empty or append_to_export is False:
                     writer.writeheader()
 
                 writer.writerow(flattened_record)
@@ -144,7 +147,8 @@ def main():
                              config.get('quotechar', '"'),
                              input_messages,
                              config.get('destination_path', ''),
-                             config.get('timestamp_in_filename', True)),
+                             config.get('timestamp_in_filename', True),
+                             config.get('append_to_export', True)),
 
     emit_state(state)
     logger.debug("Exiting normally")
