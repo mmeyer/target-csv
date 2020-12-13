@@ -67,12 +67,9 @@ def persist_messages(delimiter, quotechar, messages, destination_path, timestamp
             filename = os.path.expanduser(os.path.join(destination_path, filename))
             file_is_empty = (not os.path.isfile(filename)) or os.stat(filename).st_size == 0
 
-            print("counter: "+ str(counter))
-            print("append_to_export: "+ str(append_to_export))
-            print("file_is_empty: "+ str(file_is_empty))
             if append_to_export is False and file_is_empty is False and counter==1:
-                print("file deleted")
                 os.remove(filename)
+                file_is_empty = True
 
             flattened_record = flatten(o['record'])
 
